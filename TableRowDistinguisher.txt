@@ -1,0 +1,70 @@
+=MATCH(U15,L10:L22,0)
+=ADDRESS(ROW(L10) + U17 - 1, COLUMN(L10))
+
+Private Sub Worksheet_Change(ByVal Target As Range)
+    Dim WatchCell As Range
+    Set WatchCell = Me.Range("U15")
+
+    If Not Intersect(Target, WatchCell) Is Nothing Then
+        Call ExtractRow
+    End If
+End Sub
+
+Private Sub ExtractRow()
+    Call ClearRange(Range("U26:W29"))
+    Call CopyPasteValues(FindRange(Range("U21")), "U26")
+    Call CopyCellToClipboard("U14")
+End Sub
+
+Private Function FindRange(cellAddress As String) As String
+    On Error GoTo ErrorHandler
+    
+    Dim targetRange As Range
+    Dim extendedRange As Range
+    
+    Set targetRange = Range(cellAddress)
+    
+    If targetRange.MergeCells Then
+        Set extendedRange = targetRange.MergeArea.Resize(, targetRange.Columns.Count + 2)
+    Else
+        Set extendedRange = targetRange.Resize(, 3)
+    End If
+    
+    FindRange = extendedRange.Address
+    
+    Exit Function
+ErrorHandler:
+    MsgBox "Error: Invalid cell address"
+End Function
+
+Private Sub CopyPasteValues(sourceAddress As String, targetCellAddress As String)
+    On Error GoTo ErrorHandler
+    
+    Dim sourceRange As Range
+    Dim targetPasteRange As Range
+    
+    Set sourceRange = Range(sourceAddress)
+    Set targetPasteRange = Range(targetCellAddress)
+    
+    sourceRange.Copy Destination:=targetPasteRange
+    
+    Exit Sub
+ErrorHandler:
+    MsgBox "Error: " & Err.Description
+End Sub
+
+Private Sub ClearRange(rangeToClear As Range)
+    On Error GoTo ErrorHandler
+    
+    rangeToClear.UnMerge
+    
+    rangeToClear.ClearContents
+    
+    Exit Sub
+ErrorHandler:
+    MsgBox "Error: " & Err.Description
+End Sub
+
+Sub CopyCellToClipboard(cellRef As String)
+    Range(cellRef).Copy
+End Sub
